@@ -40,13 +40,11 @@ class Position:
         for piece in range(Piece.BLACK_PAWN.value, Piece.WHITE_PAWN.value):
             for _ in range(self.hand_piece[piece]):
                 result.append(self.to_human_readable_string(piece).strip()[0])
-                # result.append(self.to_human_readable_string(Piece(piece)).strip()[0])
 
         result.append(" , 後手 手駒: ")
         for piece in range(Piece.WHITE_PAWN.value, Piece.NUM_PIECES.value):
             for _ in range(self.hand_piece[piece]):
                 result.append(self.to_human_readable_string(piece).strip()[0])
-                # result.append(self.to_human_readable_string(Piece(piece)).strip()[0])
 
         result.append("\n")
 
@@ -128,3 +126,70 @@ class Position:
         # 手数のパース
         index += 1
         self.play = int(sfen[index:])
+
+    def put_piece(self, file, rank, piece):
+        assert (
+            self.board[file][rank] == Piece.NO_PIECE.value
+        )  # すでに駒がある場合はエラー
+        self.board[file][rank] = piece
+
+    def remove_piece(self, file, rank):
+        assert self.board[file][rank] != Piece.NO_PIECE.value  # 駒がない場合はエラー
+        self.board[file][rank] = Piece.NO_PIECE.value
+
+    def put_hand_piece(self, piece):
+        self.hand_piece[piece] += 1
+
+    def remove_hand_piece(self, piece):
+        assert self.hand_piece[piece] > 0
+        self.hand_piece[piece] -= 1
+
+    def do_move(self, move):
+        assert self.side_to_move == move.side_to_move
+        assert (
+            move.drop or self.board[move.file_from][move.rank_from] == move.piece_from
+        )
+        assert move.drop or self.board[move.file_to][move.rank_to] == move.piece_to
+
+        # 相手の駒を取る
+        if move.piece_to != Piece.NO_PIECE.value:
+            self.remove_piece(move.file_to, move.rank_to)
+            self.hand_pieces.put_hand_piece(move.piece_to.as_opponent_hand_piece())
+
+        if move.drop:
+            # 持ち駒を打つ
+            self.hand_pieces.remove_hand_piece(move.piece_from)
+        else:
+            # 盤面の駒を移動
+            self.remove_piece(move.file_from, move.rank_from)
+
+        # 駒を配置（成り判定）
+        self.put_piece(
+            move.file_to,
+            move.rank_to,
+            move.piece_from.as_promoted() if move.promotion else move.piece_from,
+        )
+
+        self.side_to_move = self.side_to_move.to_opponent()
+        self.play += 1
+        self.last_move = move
+
+    def undo_move(self, move) -> None:
+        """与えられた指し手に従い、局面を1手戻す"""
+        assert self.side_to_move != move.side_to_move
+
+        self.play -= 1
+        self.side_to_move = self.side_to_move.to_opponent()
+        self.remove_piece(move.file_to, move.rank_to)
+
+        if move.drop:
+            # 持ち駒を打った場合
+            self.hand_pieces.put_hand_piece(move.piece_from)
+        else:
+            # 盤面の駒を戻す
+            self.put_piece(move.file_from, move.rank_from, move.piece_from)
+
+        # 取った駒を戻す
+        if move.piece_to != Piece.NO_PIECE:
+            self.hand_pieces.remove_hand_piece(move.piece_to.as_opponent_hand_piece())
+            self.put_piece(move.file_to, move.rank_to, move.piece_to)

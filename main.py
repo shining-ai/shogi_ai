@@ -340,7 +340,15 @@ def main():
                     position.set_position(Position.start_position_sfen)
                     next_index = 2
                 else:
-                    print("不正なコマンドです")
+                    print(f"不正なコマンド: {line}")
+
+                # 指し手を適用
+                for move_string in line.split()[next_index:]:
+                    if move_string == "moves":
+                        continue
+                    move = Move.from_usi_string(position, move_string)
+                    position.do_move(move)
+
             case "generatemove":
                 count = 0
                 for move in generate(position):
@@ -348,7 +356,6 @@ def main():
                     sys.stdout.flush()
                     count += 1
                 print(f"合計 {count} 通り")
-                break
             case "go":
                 print("bestmove resign")
                 sys.stdout.flush()

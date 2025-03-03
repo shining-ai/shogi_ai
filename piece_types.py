@@ -4,7 +4,9 @@ from enum import Enum
 class Color(Enum):
     BLACK = 0
     WHITE = 1
-    NUM_COLORS = 2
+
+    def to_opponent(self):
+        return Color(1 - self.value)
 
 
 class Piece(Enum):
