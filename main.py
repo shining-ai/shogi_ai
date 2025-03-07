@@ -1,8 +1,15 @@
 import sys
 from typing import Generator
 from piece_types import PieceTypes, Piece, Color
-from piece_types import PIECE_TO_STR, CHAR_TO_PIECE, NON_PROMOTED_TO_PROMOTED
+from piece_types import (
+    PIECE_TO_STR,
+    CHAR_TO_PIECE,
+    NON_PROMOTED_TO_PROMOTED,
+    PIECE_TO_OPPONENT_HANDPIECE,
+)
 from position import Position
+import random
+import traceback
 
 
 def to_color(piece):
@@ -125,8 +132,9 @@ class Move:
             move.file_from = -1
             move.rank_from = -1
             move.piece_from = CHAR_TO_PIECE[move_string[0]]
-            if position.side_to_move == Color.White:
-                move.piece_from = move.piece_from.as_opponent_hand_piece()
+            if position.side_to_move == Color.WHITE:
+                # move.piece_from = move.piece_from.as_opponent_hand_piece()
+                move.piece_from = PIECE_TO_OPPONENT_HANDPIECE[move.piece_from.value].value
             move.drop = True
         else:
             # 駒を移動する指し手
@@ -317,53 +325,64 @@ def generate(position) -> Generator[Move, None, None]:
 def main():
     position = Position()
     while True:
-        line = sys.stdin.readline().strip()
-        if not line:
-            continue
+        try:
+            line = sys.stdin.readline().strip()
+            if not line:
+                continue
 
-        command = line.split()[0]
-        match command:
-            case "usi":
-                print("id name SimpleShogiEngine")
-                print("id author YourName")
-                print("usiok")
-                sys.stdout.flush()
-            case "isready":
-                print("readyok")
-                sys.stdout.flush()
-            case "position":
-                assert len(line.split()) >= 2
-                if line.split()[1] == "sfen":
-                    position.set_position(" ".join(line.split()[2:]))
-                    next_index = 6
-                elif line.split()[1] == "startpos":
-                    position.set_position(Position.start_position_sfen)
-                    next_index = 2
-                else:
-                    print(f"不正なコマンド: {line}")
-
-                # 指し手を適用
-                for move_string in line.split()[next_index:]:
-                    if move_string == "moves":
-                        continue
-                    move = Move.from_usi_string(position, move_string)
-                    position.do_move(move)
-
-            case "generatemove":
-                count = 0
-                for move in generate(position):
-                    print(move)
+            command = line.split()[0]
+            match command:
+                case "usi":
+                    print("id name SimpleShogiEngine")
+                    print("id author YourName")
+                    print("usiok")
                     sys.stdout.flush()
-                    count += 1
-                print(f"合計 {count} 通り")
-            case "go":
-                print("bestmove resign")
-                sys.stdout.flush()
-            case "quit":
-                break
-            case "d":
-                print(position)
-                sys.stdout.flush()
+                case "isready":
+                    print("readyok")
+                    sys.stdout.flush()
+                case "position":
+                    assert len(line.split()) >= 2
+                    if line.split()[1] == "sfen":
+                        position.set_position(" ".join(line.split()[2:]))
+                        next_index = 6
+                    elif line.split()[1] == "startpos":
+                        position.set_position(Position.start_position_sfen)
+                        next_index = 2
+                    else:
+                        print(f"不正なコマンド: {line}")
+
+                    # 指し手を適用
+                    for move_string in line.split()[next_index:]:
+                        if move_string == "moves":
+                            continue
+                        move = Move.from_usi_string(position, move_string)
+                        position.do_move(move)
+                case "generatemove":
+                    count = 0
+                    for move in generate(position):
+                        print(move)
+                        sys.stdout.flush()
+                        count += 1
+                    print(f"合計 {count} 通り")
+                case "go":
+                    moves = generate(position)
+                    if not moves:
+                        print("bestmove resign")
+                        sys.stdout.flush()
+                    else:
+                        move = random.choice(list(moves))
+                        print(f"bestmove {move.to_usi_string()}")
+                        sys.stdout.flush()
+                case "quit":
+                    break
+                case "d":
+                    print(position)
+                    sys.stdout.flush()
+
+        except Exception as e:
+            print(f"例外が発生しました: {e}")
+            print(traceback.format_exc())
+            print("bestmove resign")  # とりあえず投了してエンジンが落ちないようにする
 
 
 if __name__ == "__main__":

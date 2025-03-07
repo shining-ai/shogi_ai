@@ -1,5 +1,10 @@
 from piece_types import Color, Piece
-from piece_types import PIECE_TO_STR, CHAR_TO_PIECE, NON_PROMOTED_TO_PROMOTED
+from piece_types import (
+    PIECE_TO_STR,
+    CHAR_TO_PIECE,
+    NON_PROMOTED_TO_PROMOTED,
+    PIECE_TO_OPPONENT_HANDPIECE,
+)
 
 
 def as_promoted(piece: Piece) -> Piece:
@@ -154,11 +159,12 @@ class Position:
         # 相手の駒を取る
         if move.piece_to != Piece.NO_PIECE.value:
             self.remove_piece(move.file_to, move.rank_to)
-            self.hand_pieces.put_hand_piece(move.piece_to.as_opponent_hand_piece())
+            # self.put_hand_piece(move.piece_to.as_opponent_hand_piece())
+            self.put_hand_piece(PIECE_TO_OPPONENT_HANDPIECE[move.piece_to].value)
 
         if move.drop:
             # 持ち駒を打つ
-            self.hand_pieces.remove_hand_piece(move.piece_from)
+            self.remove_hand_piece(move.piece_from)
         else:
             # 盤面の駒を移動
             self.remove_piece(move.file_from, move.rank_from)
@@ -167,7 +173,7 @@ class Position:
         self.put_piece(
             move.file_to,
             move.rank_to,
-            move.piece_from.as_promoted() if move.promotion else move.piece_from,
+            as_promoted(move.piece_from).value if move.promotion else move.piece_from,
         )
 
         self.side_to_move = self.side_to_move.to_opponent()
@@ -184,12 +190,13 @@ class Position:
 
         if move.drop:
             # 持ち駒を打った場合
-            self.hand_pieces.put_hand_piece(move.piece_from)
+            self.put_hand_piece(move.piece_from)
         else:
             # 盤面の駒を戻す
             self.put_piece(move.file_from, move.rank_from, move.piece_from)
 
         # 取った駒を戻す
         if move.piece_to != Piece.NO_PIECE:
-            self.hand_pieces.remove_hand_piece(move.piece_to.as_opponent_hand_piece())
+            # self.remove_hand_piece(move.piece_to.as_opponent_hand_piece())
+            self.remove_hand_piece(PIECE_TO_OPPONENT_HANDPIECE[move.piece_to].value)
             self.put_piece(move.file_to, move.rank_to, move.piece_to)

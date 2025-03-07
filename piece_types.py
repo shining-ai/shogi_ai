@@ -109,6 +109,39 @@ NON_PROMOTED_TO_PROMOTED = {
     Piece.WHITE_ROOK.value: Piece.WHITE_DRAGON,
 }
 
+PIECE_TO_OPPONENT_HANDPIECE = [
+    Piece.NO_PIECE,
+    Piece.WHITE_PAWN,
+    Piece.WHITE_LANCE,
+    Piece.WHITE_KNIGHT,
+    Piece.WHITE_SILVER,
+    Piece.WHITE_GOLD,
+    Piece.WHITE_BISHOP,
+    Piece.WHITE_ROOK,
+    Piece.NO_PIECE,
+    Piece.WHITE_PAWN,
+    Piece.WHITE_LANCE,
+    Piece.WHITE_KNIGHT,
+    Piece.WHITE_SILVER,
+    Piece.WHITE_BISHOP,
+    Piece.WHITE_ROOK,
+    Piece.BLACK_PAWN,
+    Piece.BLACK_LANCE,
+    Piece.BLACK_KNIGHT,
+    Piece.BLACK_SILVER,
+    Piece.BLACK_GOLD,
+    Piece.BLACK_BISHOP,
+    Piece.BLACK_ROOK,
+    Piece.NO_PIECE,
+    Piece.BLACK_PAWN,
+    Piece.BLACK_LANCE,
+    Piece.BLACK_KNIGHT,
+    Piece.BLACK_SILVER,
+    Piece.BLACK_BISHOP,
+    Piece.BLACK_ROOK,
+    Piece.NUM_PIECES,
+]
+
 
 class MoveDirection:
     def __init__(self, direction, is_long=False):
