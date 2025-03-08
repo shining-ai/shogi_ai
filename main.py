@@ -6,6 +6,7 @@ from piece_types import (
     CHAR_TO_PIECE,
     NON_PROMOTED_TO_PROMOTED,
     PIECE_TO_OPPONENT_HANDPIECE,
+    PIECE_TO_CHAR,
 )
 from position import Position
 import random
@@ -96,7 +97,7 @@ class Move:
 
         usi_string = ""
         if self.drop:
-            usi_string += self.piece_from.to_usi_char().upper()
+            usi_string += PIECE_TO_CHAR[self.piece_from].upper()
             usi_string += "*"
         else:
             usi_string += chr(self.file_from + ord("1"))
@@ -134,7 +135,9 @@ class Move:
             move.piece_from = CHAR_TO_PIECE[move_string[0]]
             if position.side_to_move == Color.WHITE:
                 # move.piece_from = move.piece_from.as_opponent_hand_piece()
-                move.piece_from = PIECE_TO_OPPONENT_HANDPIECE[move.piece_from.value].value
+                move.piece_from = PIECE_TO_OPPONENT_HANDPIECE[
+                    move.piece_from.value
+                ].value
             move.drop = True
         else:
             # 駒を移動する指し手

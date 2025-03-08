@@ -94,6 +94,26 @@ CHAR_TO_PIECE = {
     "p": Piece.WHITE_PAWN,
 }
 
+PIECE_TO_CHAR = {
+    Piece.BLACK_KING.value: "K",
+    Piece.WHITE_KING.value: "k",
+    Piece.BLACK_ROOK.value: "R",
+    Piece.WHITE_ROOK.value: "r",
+    Piece.BLACK_BISHOP.value: "B",
+    Piece.WHITE_BISHOP.value: "b",
+    Piece.BLACK_GOLD.value: "G",
+    Piece.WHITE_GOLD.value: "g",
+    Piece.BLACK_SILVER.value: "S",
+    Piece.WHITE_SILVER.value: "s",
+    Piece.BLACK_KNIGHT.value: "N",
+    Piece.WHITE_KNIGHT.value: "n",
+    Piece.BLACK_LANCE.value: "L",
+    Piece.WHITE_LANCE.value: "l",
+    Piece.BLACK_PAWN.value: "P",
+    Piece.WHITE_PAWN.value: "p",
+}
+
+
 NON_PROMOTED_TO_PROMOTED = {
     Piece.BLACK_PAWN.value: Piece.BLACK_PROMOTED_PAWN,
     Piece.BLACK_LANCE.value: Piece.BLACK_PROMOTED_LANCE,
