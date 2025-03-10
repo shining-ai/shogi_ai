@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, unique
 
 
 class Color(Enum):
@@ -9,6 +9,7 @@ class Color(Enum):
         return Color(1 - self.value)
 
 
+@unique
 class Piece(Enum):
     NO_PIECE = 0
     BLACK_PAWN = 1
@@ -41,39 +42,97 @@ class Piece(Enum):
     WHITE_DRAGON = 28
     NUM_PIECES = 29
 
+    def is_black(self):
+        return Piece.BLACK_PAWN.value <= self.value < Piece.WHITE_PAWN.value
 
-PIECE_TO_STR = [
-    "    ",
-    " 歩 ",
-    " 香 ",
-    " 桂 ",
-    " 銀 ",
-    " 金 ",
-    " 角 ",
-    " 飛 ",
-    " 王 ",
-    " と ",
-    " 杏 ",
-    " 圭 ",
-    " 全 ",
-    " 馬 ",
-    " 龍 ",
-    " 歩↓",
-    " 香↓",
-    " 桂↓",
-    " 銀↓",
-    " 金↓",
-    " 角↓",
-    " 飛↓",
-    " 王↓",
-    " と↓",
-    " 杏↓",
-    " 圭↓",
-    " 全↓",
-    " 馬↓",
-    " 龍↓",
-    None,
-]
+    def is_white(self):
+        return Piece.WHITE_PAWN.value <= self.value < Piece.NUM_PIECES.value
+
+    def to_human_readable_string(self):
+        readable_string = PIECE_TO_READABLE.get(self, None)
+        assert readable_string is not None
+        return readable_string
+
+    def as_promoted(self):
+        assert self != Piece.NO_PIECE
+        return NON_PROMOTED_TO_PROMOTED.get(self, self)
+
+    def to_char(self):
+        assert self != Piece.NO_PIECE
+        return PIECE_TO_CHAR.get(self, None)
+
+    def as_opponent_hand_piece(self):
+        assert self != Piece.NO_PIECE
+        if self.is_black():
+            return Piece(self.value + 15)
+        elif self.is_white():
+            return Piece(self.value - 15)
+
+    def to_color(self):
+        if self == Piece.NO_PIECE:
+            return None
+        return Color.BLACK if self.is_black() else Color.WHITE
+
+    def move_directions(self):
+        return PieceTypes.MoveDirections[self]
+
+    def can_promote(self):
+        return self in NON_PROMOTED_TO_PROMOTED
+
+    def can_put_without_promotion(self, rank_to):
+        return (
+            (self == Piece.BLACK_PAWN and rank_to >= 1)
+            or (self == Piece.BLACK_LANCE and rank_to >= 1)
+            or (self == Piece.BLACK_KNIGHT and rank_to >= 2)
+            or (self == Piece.WHITE_PAWN and rank_to <= 7)
+            or (self == Piece.WHITE_LANCE and rank_to <= 7)
+            or (self == Piece.WHITE_KNIGHT and rank_to <= 6)
+            or (
+                self
+                not in {
+                    Piece.BLACK_PAWN,
+                    Piece.BLACK_LANCE,
+                    Piece.BLACK_KNIGHT,
+                    Piece.WHITE_PAWN,
+                    Piece.WHITE_LANCE,
+                    Piece.WHITE_KNIGHT,
+                }
+            )
+        )
+
+
+PIECE_TO_READABLE = {
+    Piece.NO_PIECE: "    ",
+    Piece.BLACK_PAWN: " 歩 ",
+    Piece.BLACK_LANCE: " 香 ",
+    Piece.BLACK_KNIGHT: " 桂 ",
+    Piece.BLACK_SILVER: " 銀 ",
+    Piece.BLACK_GOLD: " 金 ",
+    Piece.BLACK_BISHOP: " 角 ",
+    Piece.BLACK_ROOK: " 飛 ",
+    Piece.BLACK_KING: " 王 ",
+    Piece.BLACK_PROMOTED_PAWN: " と ",
+    Piece.BLACK_PROMOTED_LANCE: " 杏 ",
+    Piece.BLACK_PROMOTED_KNIGHT: " 圭 ",
+    Piece.BLACK_PROMOTED_SILVER: " 全 ",
+    Piece.BLACK_HORSE: " 馬 ",
+    Piece.BLACK_DRAGON: " 龍 ",
+    Piece.WHITE_PAWN: " 歩↓",
+    Piece.WHITE_LANCE: " 香↓",
+    Piece.WHITE_KNIGHT: " 桂↓",
+    Piece.WHITE_SILVER: " 銀↓",
+    Piece.WHITE_GOLD: " 金↓",
+    Piece.WHITE_BISHOP: " 角↓",
+    Piece.WHITE_ROOK: " 飛↓",
+    Piece.WHITE_KING: " 王↓",
+    Piece.WHITE_PROMOTED_PAWN: " と↓",
+    Piece.WHITE_PROMOTED_LANCE: " 杏↓",
+    Piece.WHITE_PROMOTED_KNIGHT: " 圭↓",
+    Piece.WHITE_PROMOTED_SILVER: " 全↓",
+    Piece.WHITE_HORSE: " 馬↓",
+    Piece.WHITE_DRAGON: " 龍↓",
+}
+
 
 CHAR_TO_PIECE = {
     "K": Piece.BLACK_KING,
@@ -95,72 +154,39 @@ CHAR_TO_PIECE = {
 }
 
 PIECE_TO_CHAR = {
-    Piece.BLACK_KING.value: "K",
-    Piece.WHITE_KING.value: "k",
-    Piece.BLACK_ROOK.value: "R",
-    Piece.WHITE_ROOK.value: "r",
-    Piece.BLACK_BISHOP.value: "B",
-    Piece.WHITE_BISHOP.value: "b",
-    Piece.BLACK_GOLD.value: "G",
-    Piece.WHITE_GOLD.value: "g",
-    Piece.BLACK_SILVER.value: "S",
-    Piece.WHITE_SILVER.value: "s",
-    Piece.BLACK_KNIGHT.value: "N",
-    Piece.WHITE_KNIGHT.value: "n",
-    Piece.BLACK_LANCE.value: "L",
-    Piece.WHITE_LANCE.value: "l",
-    Piece.BLACK_PAWN.value: "P",
-    Piece.WHITE_PAWN.value: "p",
+    Piece.BLACK_KING: "K",
+    Piece.WHITE_KING: "k",
+    Piece.BLACK_ROOK: "R",
+    Piece.WHITE_ROOK: "r",
+    Piece.BLACK_BISHOP: "B",
+    Piece.WHITE_BISHOP: "b",
+    Piece.BLACK_GOLD: "G",
+    Piece.WHITE_GOLD: "g",
+    Piece.BLACK_SILVER: "S",
+    Piece.WHITE_SILVER: "s",
+    Piece.BLACK_KNIGHT: "N",
+    Piece.WHITE_KNIGHT: "n",
+    Piece.BLACK_LANCE: "L",
+    Piece.WHITE_LANCE: "l",
+    Piece.BLACK_PAWN: "P",
+    Piece.WHITE_PAWN: "p",
 }
 
 
 NON_PROMOTED_TO_PROMOTED = {
-    Piece.BLACK_PAWN.value: Piece.BLACK_PROMOTED_PAWN,
-    Piece.BLACK_LANCE.value: Piece.BLACK_PROMOTED_LANCE,
-    Piece.BLACK_KNIGHT.value: Piece.BLACK_PROMOTED_KNIGHT,
-    Piece.BLACK_SILVER.value: Piece.BLACK_PROMOTED_SILVER,
-    Piece.BLACK_BISHOP.value: Piece.BLACK_HORSE,
-    Piece.BLACK_ROOK.value: Piece.BLACK_DRAGON,
-    Piece.WHITE_PAWN.value: Piece.WHITE_PROMOTED_PAWN,
-    Piece.WHITE_LANCE.value: Piece.WHITE_PROMOTED_LANCE,
-    Piece.WHITE_KNIGHT.value: Piece.WHITE_PROMOTED_KNIGHT,
-    Piece.WHITE_SILVER.value: Piece.WHITE_PROMOTED_SILVER,
-    Piece.WHITE_BISHOP.value: Piece.WHITE_HORSE,
-    Piece.WHITE_ROOK.value: Piece.WHITE_DRAGON,
+    Piece.BLACK_PAWN: Piece.BLACK_PROMOTED_PAWN,
+    Piece.BLACK_LANCE: Piece.BLACK_PROMOTED_LANCE,
+    Piece.BLACK_KNIGHT: Piece.BLACK_PROMOTED_KNIGHT,
+    Piece.BLACK_SILVER: Piece.BLACK_PROMOTED_SILVER,
+    Piece.BLACK_BISHOP: Piece.BLACK_HORSE,
+    Piece.BLACK_ROOK: Piece.BLACK_DRAGON,
+    Piece.WHITE_PAWN: Piece.WHITE_PROMOTED_PAWN,
+    Piece.WHITE_LANCE: Piece.WHITE_PROMOTED_LANCE,
+    Piece.WHITE_KNIGHT: Piece.WHITE_PROMOTED_KNIGHT,
+    Piece.WHITE_SILVER: Piece.WHITE_PROMOTED_SILVER,
+    Piece.WHITE_BISHOP: Piece.WHITE_HORSE,
+    Piece.WHITE_ROOK: Piece.WHITE_DRAGON,
 }
-
-PIECE_TO_OPPONENT_HANDPIECE = [
-    Piece.NO_PIECE,
-    Piece.WHITE_PAWN,
-    Piece.WHITE_LANCE,
-    Piece.WHITE_KNIGHT,
-    Piece.WHITE_SILVER,
-    Piece.WHITE_GOLD,
-    Piece.WHITE_BISHOP,
-    Piece.WHITE_ROOK,
-    Piece.NO_PIECE,
-    Piece.WHITE_PAWN,
-    Piece.WHITE_LANCE,
-    Piece.WHITE_KNIGHT,
-    Piece.WHITE_SILVER,
-    Piece.WHITE_BISHOP,
-    Piece.WHITE_ROOK,
-    Piece.BLACK_PAWN,
-    Piece.BLACK_LANCE,
-    Piece.BLACK_KNIGHT,
-    Piece.BLACK_SILVER,
-    Piece.BLACK_GOLD,
-    Piece.BLACK_BISHOP,
-    Piece.BLACK_ROOK,
-    Piece.NO_PIECE,
-    Piece.BLACK_PAWN,
-    Piece.BLACK_LANCE,
-    Piece.BLACK_KNIGHT,
-    Piece.BLACK_SILVER,
-    Piece.BLACK_BISHOP,
-    Piece.BLACK_ROOK,
-    Piece.NUM_PIECES,
-]
 
 
 class MoveDirection:
@@ -184,56 +210,44 @@ class PieceTypes:
     DownLeft = Direction(1, 1)
     Down = Direction(0, 1)
     DownRight = Direction(-1, 1)
+    MoveGold = [
+        MoveDirection(UpLeft),
+        MoveDirection(Up),
+        MoveDirection(UpRight),
+        MoveDirection(Left),
+        MoveDirection(Right),
+        MoveDirection(Down),
+    ]
 
-    MoveDirections = [
-        # NoPiece
-        None,
-        # BlackPawn
-        [
-            MoveDirection(Up),
-        ],
-        # BlackLance
-        [
-            MoveDirection(Up, True),
-        ],
-        # BlackKnight
-        [
+    MoveDirections = {
+        Piece.NO_PIECE: None,
+        Piece.BLACK_PAWN: [MoveDirection(Up)],
+        Piece.BLACK_LANCE: [MoveDirection(Up, True)],
+        Piece.BLACK_KNIGHT: [
             MoveDirection(Direction(-1, -2)),
             MoveDirection(Direction(1, -2)),
         ],
-        # BlackSilver
-        [
+        Piece.BLACK_SILVER: [
             MoveDirection(UpLeft),
             MoveDirection(Up),
             MoveDirection(UpRight),
             MoveDirection(DownLeft),
             MoveDirection(DownRight),
         ],
-        # BlackGold
-        [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(Down),
-        ],
-        # BlackBishop
-        [
+        Piece.BLACK_GOLD: MoveGold,
+        Piece.BLACK_BISHOP: [
             MoveDirection(UpLeft, True),
             MoveDirection(UpRight, True),
             MoveDirection(DownLeft, True),
             MoveDirection(DownRight, True),
         ],
-        # BlackRook
-        [
+        Piece.BLACK_ROOK: [
             MoveDirection(Up, True),
             MoveDirection(Left, True),
             MoveDirection(Right, True),
             MoveDirection(Down, True),
         ],
-        # BlackKing
-        [
+        Piece.BLACK_KING: [
             MoveDirection(UpLeft),
             MoveDirection(Up),
             MoveDirection(UpRight),
@@ -243,44 +257,11 @@ class PieceTypes:
             MoveDirection(Down),
             MoveDirection(DownRight),
         ],
-        # BlackPromotedPawn
-        [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(Down),
-        ],
-        # BlackPromotedLance
-        [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(Down),
-        ],
-        # BlackPromotedKnight
-        [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(Down),
-        ],
-        # BlackPromotedSilver
-        [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(Down),
-        ],
-        # BlackHorse
-        [
+        Piece.BLACK_PROMOTED_PAWN: MoveGold,
+        Piece.BLACK_PROMOTED_LANCE: MoveGold,
+        Piece.BLACK_PROMOTED_KNIGHT: MoveGold,
+        Piece.BLACK_PROMOTED_SILVER: MoveGold,
+        Piece.BLACK_HORSE: [
             MoveDirection(UpLeft, True),
             MoveDirection(Up),
             MoveDirection(UpRight, True),
@@ -290,8 +271,7 @@ class PieceTypes:
             MoveDirection(Down),
             MoveDirection(DownRight, True),
         ],
-        # BlackDragon
-        [
+        Piece.BLACK_DRAGON: [
             MoveDirection(UpLeft),
             MoveDirection(Up, True),
             MoveDirection(UpRight),
@@ -301,52 +281,33 @@ class PieceTypes:
             MoveDirection(Down, True),
             MoveDirection(DownRight),
         ],
-        # WhitePawn
-        [
-            MoveDirection(Down),
-        ],
-        # WhiteLance
-        [
-            MoveDirection(Down, True),
-        ],
-        # WhiteKnight
-        [
+        Piece.WHITE_PAWN: [MoveDirection(Down)],
+        Piece.WHITE_LANCE: [MoveDirection(Down, True)],
+        Piece.WHITE_KNIGHT: [
             MoveDirection(Direction(1, 2)),
             MoveDirection(Direction(-1, 2)),
         ],
-        # WhiteSilver
-        [
+        Piece.WHITE_SILVER: [
             MoveDirection(UpLeft),
+            MoveDirection(Up),
             MoveDirection(UpRight),
             MoveDirection(DownLeft),
-            MoveDirection(Down),
             MoveDirection(DownRight),
         ],
-        # WhiteGold
-        [
-            MoveDirection(Up),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
-        ],
-        # WhiteBishop
-        [
+        Piece.WHITE_GOLD: MoveGold,
+        Piece.WHITE_BISHOP: [
             MoveDirection(UpLeft, True),
             MoveDirection(UpRight, True),
             MoveDirection(DownLeft, True),
             MoveDirection(DownRight, True),
         ],
-        # WhiteRook
-        [
+        Piece.WHITE_ROOK: [
             MoveDirection(Up, True),
             MoveDirection(Left, True),
             MoveDirection(Right, True),
             MoveDirection(Down, True),
         ],
-        # WhiteKing
-        [
+        Piece.WHITE_KING: [
             MoveDirection(UpLeft),
             MoveDirection(Up),
             MoveDirection(UpRight),
@@ -356,44 +317,11 @@ class PieceTypes:
             MoveDirection(Down),
             MoveDirection(DownRight),
         ],
-        # WhitePromotedPawn
-        [
-            MoveDirection(Up),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
-        ],
-        # WhitePromotedLance
-        [
-            MoveDirection(Up),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
-        ],
-        # WhitePromotedKnight
-        [
-            MoveDirection(Up),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
-        ],
-        # WhitePromotedSilver
-        [
-            MoveDirection(Up),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
-        ],
-        # WhiteHorse
-        [
+        Piece.WHITE_PROMOTED_PAWN: MoveGold,
+        Piece.WHITE_PROMOTED_LANCE: MoveGold,
+        Piece.WHITE_PROMOTED_KNIGHT: MoveGold,
+        Piece.WHITE_PROMOTED_SILVER: MoveGold,
+        Piece.WHITE_HORSE: [
             MoveDirection(UpLeft, True),
             MoveDirection(Up),
             MoveDirection(UpRight, True),
@@ -403,8 +331,7 @@ class PieceTypes:
             MoveDirection(Down),
             MoveDirection(DownRight, True),
         ],
-        # WhiteDragon
-        [
+        Piece.WHITE_DRAGON: [
             MoveDirection(UpLeft),
             MoveDirection(Up, True),
             MoveDirection(UpRight),
@@ -414,6 +341,4 @@ class PieceTypes:
             MoveDirection(Down, True),
             MoveDirection(DownRight),
         ],
-        # NumPieces
-        None,
-    ]
+    }

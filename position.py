@@ -1,15 +1,5 @@
 from piece_types import Color, Piece
-from piece_types import (
-    PIECE_TO_STR,
-    CHAR_TO_PIECE,
-    NON_PROMOTED_TO_PROMOTED,
-    PIECE_TO_OPPONENT_HANDPIECE,
-)
-
-
-def as_promoted(piece: Piece) -> Piece:
-    """成り駒に変換する（成れる場合のみ変換）"""
-    return NON_PROMOTED_TO_PROMOTED.get(piece, piece)
+from piece_types import CHAR_TO_PIECE
 
 
 class Position:
@@ -22,9 +12,9 @@ class Position:
         self.side_to_move = Color.BLACK  # 初期手番は先手
         # 盤面初期化
         self.board = [
-            [Piece.NO_PIECE.value] * self.BOARD_SIZE for _ in range(self.BOARD_SIZE)
+            [Piece.NO_PIECE] * self.BOARD_SIZE for _ in range(self.BOARD_SIZE)
         ]
-        self.hand_piece = [0] * len(Piece)  # 持ち駒の初期化
+        self.hand_piece = [0] * Piece.NUM_PIECES.value  # 持ち駒の初期化
         self.play = 1  # 初期手数
 
     def __str__(self):
@@ -35,21 +25,21 @@ class Position:
         for rank in range(self.BOARD_SIZE):
             result.append("|")
             for file in range(self.BOARD_SIZE - 1, -1, -1):
-                result.append(self.to_human_readable_string(self.board[file][rank]))
+                result.append(self.board[file][rank].to_human_readable_string())
                 result.append("|")
             result.append("\n")
             result.append("+----+----+----+----+----+----+----+----+----+\n")
 
         # 持ち駒の状態を表示
         result.append("先手 手駒: ")
-        for piece in range(Piece.BLACK_PAWN.value, Piece.WHITE_PAWN.value):
-            for _ in range(self.hand_piece[piece]):
-                result.append(self.to_human_readable_string(piece).strip()[0])
+        for piece_value in range(Piece.BLACK_PAWN.value, Piece.WHITE_PAWN.value):
+            for _ in range(self.hand_piece[piece_value]):
+                result.append(Piece(piece_value).to_human_readable_string().strip()[0])
 
         result.append(" , 後手 手駒: ")
-        for piece in range(Piece.WHITE_PAWN.value, Piece.NUM_PIECES.value):
-            for _ in range(self.hand_piece[piece]):
-                result.append(self.to_human_readable_string(piece).strip()[0])
+        for piece_value in range(Piece.WHITE_PAWN.value, Piece.NUM_PIECES.value):
+            for _ in range(self.hand_piece[piece_value]):
+                result.append(Piece(piece_value).to_human_readable_string().strip()[0])
 
         result.append("\n")
 
@@ -59,17 +49,12 @@ class Position:
         )
         return "".join(result)
 
-    def to_human_readable_string(self, piece):
-        if not 0 <= piece < len(PIECE_TO_STR):
-            return " "
-        return PIECE_TO_STR[piece]
-
     def set_position(self, sfen):
         self.side_to_move = Color.BLACK
         self.board = [
-            [Piece.NO_PIECE.value] * self.BOARD_SIZE for _ in range(self.BOARD_SIZE)
+            [Piece.NO_PIECE] * self.BOARD_SIZE for _ in range(self.BOARD_SIZE)
         ]
-        self.hand_piece = [0] * len(Piece)
+        self.hand_piece = [0] * Piece.NUM_PIECES.value  # 持ち駒の初期化
         self.play = 1
 
         file = self.BOARD_SIZE - 1
@@ -91,15 +76,15 @@ class Position:
             elif c.isdigit():
                 empty_sequnce = int(c)
                 for _ in range(empty_sequnce):
-                    self.board[file][rank] = Piece.NO_PIECE.value
+                    self.board[file][rank] = Piece.NO_PIECE
                     file -= 1
             else:
-                piece = CHAR_TO_PIECE.get(c)
+                piece = CHAR_TO_PIECE.get(c, None)
                 assert piece is not None
                 if promotion:
-                    piece = as_promoted(piece)
+                    piece = piece.as_promoted()
                     promotion = False
-                self.board[file][rank] = piece.value
+                self.board[file][rank] = piece
                 file -= 1
 
         # 手番のパース
@@ -123,7 +108,7 @@ class Position:
             if c.isdigit():
                 count = count * 10 + int(c)
                 continue
-            piece = CHAR_TO_PIECE.get(c)
+            piece = CHAR_TO_PIECE.get(c, None)
             assert piece is not None
             self.hand_piece[piece.value] = max(1, count)
             count = 0
@@ -132,24 +117,25 @@ class Position:
         index += 1
         self.play = int(sfen[index:])
 
-    def put_piece(self, file, rank, piece):
-        assert (
-            self.board[file][rank] == Piece.NO_PIECE.value
-        )  # すでに駒がある場合はエラー
+    def put_piece(self, file: int, rank: int, piece: Piece) -> None:
+        assert self.board[file][rank] == Piece.NO_PIECE  # すでに駒がある場合はエラー
         self.board[file][rank] = piece
 
-    def remove_piece(self, file, rank):
-        assert self.board[file][rank] != Piece.NO_PIECE.value  # 駒がない場合はエラー
-        self.board[file][rank] = Piece.NO_PIECE.value
+    def remove_piece(self, file: int, rank: int) -> None:
+        assert self.board[file][rank] != Piece.NO_PIECE  # 駒がない場合はエラー
+        self.board[file][rank] = Piece.NO_PIECE
 
-    def put_hand_piece(self, piece):
-        self.hand_piece[piece] += 1
+    def put_hand_piece(self, piece: Piece) -> None:
+        # 持ち駒に駒を加える
+        self.hand_piece[piece.value] += 1
 
-    def remove_hand_piece(self, piece):
-        assert self.hand_piece[piece] > 0
-        self.hand_piece[piece] -= 1
+    def remove_hand_piece(self, piece: Piece) -> None:
+        # 持ち駒から駒を取り除く
+        assert self.hand_piece[piece.value] > 0
+        self.hand_piece[piece.value] -= 1
 
     def do_move(self, move):
+        """与えられた指し手に従い、局面を1手進める"""
         assert self.side_to_move == move.side_to_move
         assert (
             move.drop or self.board[move.file_from][move.rank_from] == move.piece_from
@@ -157,10 +143,9 @@ class Position:
         assert move.drop or self.board[move.file_to][move.rank_to] == move.piece_to
 
         # 相手の駒を取る
-        if move.piece_to != Piece.NO_PIECE.value:
+        if move.piece_to != Piece.NO_PIECE:
             self.remove_piece(move.file_to, move.rank_to)
-            # self.put_hand_piece(move.piece_to.as_opponent_hand_piece())
-            self.put_hand_piece(PIECE_TO_OPPONENT_HANDPIECE[move.piece_to].value)
+            self.put_hand_piece(move.piece_to.as_opponent_hand_piece())
 
         if move.drop:
             # 持ち駒を打つ
@@ -173,7 +158,7 @@ class Position:
         self.put_piece(
             move.file_to,
             move.rank_to,
-            as_promoted(move.piece_from).value if move.promotion else move.piece_from,
+            move.piece_from.as_promoted() if move.promotion else move.piece_from,
         )
 
         self.side_to_move = self.side_to_move.to_opponent()
@@ -197,6 +182,5 @@ class Position:
 
         # 取った駒を戻す
         if move.piece_to != Piece.NO_PIECE:
-            # self.remove_hand_piece(move.piece_to.as_opponent_hand_piece())
-            self.remove_hand_piece(PIECE_TO_OPPONENT_HANDPIECE[move.piece_to].value)
+            self.remove_hand_piece(move.piece_to.as_opponent_hand_piece())
             self.put_piece(move.file_to, move.rank_to, move.piece_to)
