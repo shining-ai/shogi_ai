@@ -16,6 +16,10 @@ class Position:
         ]
         self.hand_piece = [0] * Piece.NUM_PIECES.value  # 持ち駒の初期化
         self.play = 1  # 初期手数
+        self.black_king_file = 0
+        self.black_king_rank = 0
+        self.white_king_file = 0
+        self.white_king_rank = 0
 
     def __str__(self):
         result = []
@@ -85,6 +89,14 @@ class Position:
                     piece = piece.as_promoted()
                     promotion = False
                 self.board[file][rank] = piece
+
+                if piece == Piece.BLACK_KING:
+                    self.black_king_file = file
+                    self.black_king_rank = rank
+                elif piece == Piece.WHITE_KING:
+                    self.white_king_file = file
+                    self.white_king_rank = rank
+
                 file -= 1
 
         # 手番のパース
@@ -161,6 +173,13 @@ class Position:
             move.piece_from.as_promoted() if move.promotion else move.piece_from,
         )
 
+        if move.piece_from == Piece.BLACK_KING:
+            self.black_king_file = move.file_to
+            self.black_king_rank = move.rank_to
+        if move.piece_from == Piece.WHITE_KING:
+            self.white_king_file = move.file_to
+            self.white_king_rank = move.rank_to
+
         self.side_to_move = self.side_to_move.to_opponent()
         self.play += 1
         self.last_move = move
@@ -171,6 +190,14 @@ class Position:
 
         self.play -= 1
         self.side_to_move = self.side_to_move.to_opponent()
+
+        if move.piece_from == Piece.BLACK_KING:
+            self.black_king_file = move.file_from
+            self.black_king_rank = move.rank_from
+        if move.piece_from == Piece.WHITE_KING:
+            self.white_king_file = move.file_from
+            self.white_king_rank = move.rank_from
+
         self.remove_piece(move.file_to, move.rank_to)
 
         if move.drop:
@@ -184,3 +211,37 @@ class Position:
         if move.piece_to != Piece.NO_PIECE:
             self.remove_hand_piece(move.piece_to.as_opponent_hand_piece())
             self.put_piece(move.file_to, move.rank_to, move.piece_to)
+
+    def is_in_checked(self, color) -> bool:
+        """指定した手番の王が王手されているかどうかを返す"""
+        king = Piece.BLACK_KING if color == Color.BLACK else Piece.WHITE_KING
+        for file_from in range(self.BOARD_SIZE):
+            for rank_from in range(self.BOARD_SIZE):
+                piece_from = self.board[file_from][rank_from]
+                if piece_from == Piece.NO_PIECE:
+                    # 駒がない場合はスキップ
+                    continue
+                if piece_from.to_color() == color:
+                    # 自分の駒の場合はスキップ
+                    continue
+                for move_direction in piece_from.move_directions():
+                    max_distance = 8 if move_direction.is_long else 1
+                    file_to = file_from
+                    rank_to = rank_from
+                    for distance in range(max_distance):
+                        file_to += move_direction.direction.delta_file
+                        rank_to += move_direction.direction.delta_rank
+                        if not (
+                            0 <= file_to < Position.BOARD_SIZE
+                            and 0 <= rank_to < Position.BOARD_SIZE
+                        ):
+                            # 盤外に出たので何もしない
+                            continue
+
+                        piece_to = self.board[file_to][rank_to]
+                        if piece_to == king:
+                            return True
+                        if piece_to != Piece.NO_PIECE:
+                            # 王以外の駒がある
+                            break
+        return False

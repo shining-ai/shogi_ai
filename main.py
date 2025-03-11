@@ -49,15 +49,38 @@ def main():
                         sys.stdout.flush()
                         count += 1
                     print(f"合計 {count} 通り")
+                case "okmove":
+                    moves = list(generate(position))
+                    ok_moves = []
+                    for move in moves:
+                        position.do_move(move)
+                        if not position.is_in_checked(
+                            position.side_to_move.to_opponent()
+                        ):
+                            ok_moves.append(move)
+                        position.undo_move(move)
+                    for move in ok_moves:
+                        print(move)
                 case "go":
-                    moves = generate(position)
-                    if not moves:
+                    moves = list(generate(position))
+                    ok_moves = []
+                    for move in moves:
+                        position.do_move(move)
+                        if not position.is_in_checked(
+                            position.side_to_move.to_opponent()
+                        ):
+                            ok_moves.append(move)
+                        position.undo_move(move)
+                    if not ok_moves:
                         print("bestmove resign")
                         sys.stdout.flush()
                     else:
-                        move = random.choice(list(moves))
+                        move = random.choice(ok_moves)
                         print(f"bestmove {move.to_usi_string()}")
                         sys.stdout.flush()
+                case "check":
+                    print(position.is_in_checked())
+                    sys.stdout.flush()
                 case "quit":
                     break
                 case "d":

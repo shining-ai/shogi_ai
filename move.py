@@ -113,7 +113,7 @@ class Move:
             # 駒打ちの指し手
             move.file_from = -1
             move.rank_from = -1
-            move.piece_from = CHAR_TO_PIECE[move_string[0]]
+            move.piece_from = Piece(CHAR_TO_PIECE[move_string[0]])
             if position.side_to_move == Color.WHITE:
                 move.piece_from = move.piece_from.as_opponent_hand_piece()
             move.drop = True

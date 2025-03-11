@@ -63,10 +63,7 @@ class Piece(Enum):
 
     def as_opponent_hand_piece(self):
         assert self != Piece.NO_PIECE
-        if self.is_black():
-            return Piece(self.value + 15)
-        elif self.is_white():
-            return Piece(self.value - 15)
+        return PIECE_TO_OPPONENT_PIECE.get(self, None)
 
     def to_color(self):
         if self == Piece.NO_PIECE:
@@ -188,6 +185,37 @@ NON_PROMOTED_TO_PROMOTED = {
     Piece.WHITE_ROOK: Piece.WHITE_DRAGON,
 }
 
+PIECE_TO_OPPONENT_PIECE = {
+    Piece.BLACK_PAWN: Piece.WHITE_PAWN,
+    Piece.BLACK_LANCE: Piece.WHITE_LANCE,
+    Piece.BLACK_KNIGHT: Piece.WHITE_KNIGHT,
+    Piece.BLACK_SILVER: Piece.WHITE_SILVER,
+    Piece.BLACK_GOLD: Piece.WHITE_GOLD,
+    Piece.BLACK_BISHOP: Piece.WHITE_BISHOP,
+    Piece.BLACK_ROOK: Piece.WHITE_ROOK,
+    Piece.BLACK_KING: Piece.WHITE_KING,
+    Piece.BLACK_PROMOTED_PAWN: Piece.WHITE_PAWN,
+    Piece.BLACK_PROMOTED_LANCE: Piece.WHITE_LANCE,
+    Piece.BLACK_PROMOTED_KNIGHT: Piece.WHITE_KNIGHT,
+    Piece.BLACK_PROMOTED_SILVER: Piece.WHITE_SILVER,
+    Piece.BLACK_HORSE: Piece.WHITE_BISHOP,
+    Piece.BLACK_DRAGON: Piece.WHITE_ROOK,
+    Piece.WHITE_PAWN: Piece.BLACK_PAWN,
+    Piece.WHITE_LANCE: Piece.BLACK_LANCE,
+    Piece.WHITE_KNIGHT: Piece.BLACK_KNIGHT,
+    Piece.WHITE_SILVER: Piece.BLACK_SILVER,
+    Piece.WHITE_GOLD: Piece.BLACK_GOLD,
+    Piece.WHITE_BISHOP: Piece.BLACK_BISHOP,
+    Piece.WHITE_ROOK: Piece.BLACK_ROOK,
+    Piece.WHITE_KING: Piece.BLACK_KING,
+    Piece.WHITE_PROMOTED_PAWN: Piece.BLACK_PAWN,
+    Piece.WHITE_PROMOTED_LANCE: Piece.BLACK_LANCE,
+    Piece.WHITE_PROMOTED_KNIGHT: Piece.BLACK_KNIGHT,
+    Piece.WHITE_PROMOTED_SILVER: Piece.BLACK_SILVER,
+    Piece.WHITE_HORSE: Piece.BLACK_BISHOP,
+    Piece.WHITE_DRAGON: Piece.BLACK_ROOK,
+}
+
 
 class MoveDirection:
     def __init__(self, direction, is_long=False):
@@ -202,143 +230,151 @@ class Direction:
 
 
 class PieceTypes:
-    UpLeft = Direction(1, -1)
-    Up = Direction(0, -1)
-    UpRight = Direction(-1, -1)
-    Left = Direction(1, 0)
-    Right = Direction(-1, 0)
-    DownLeft = Direction(1, 1)
-    Down = Direction(0, 1)
-    DownRight = Direction(-1, 1)
-    MoveGold = [
-        MoveDirection(UpLeft),
-        MoveDirection(Up),
-        MoveDirection(UpRight),
-        MoveDirection(Left),
-        MoveDirection(Right),
-        MoveDirection(Down),
+    UP_LEFT = Direction(1, -1)
+    UP = Direction(0, -1)
+    UP_RIGHT = Direction(-1, -1)
+    LEFT = Direction(1, 0)
+    RIGHT = Direction(-1, 0)
+    DOWN_LEFT = Direction(1, 1)
+    DOWN = Direction(0, 1)
+    DOWN_RIGHT = Direction(-1, 1)
+    MOVE_BLACK_GOLD = [
+        MoveDirection(UP_LEFT),
+        MoveDirection(UP),
+        MoveDirection(UP_RIGHT),
+        MoveDirection(LEFT),
+        MoveDirection(RIGHT),
+        MoveDirection(DOWN),
+    ]
+    MOVE_WHITE_GOLD = [
+        MoveDirection(DOWN_LEFT),
+        MoveDirection(DOWN),
+        MoveDirection(DOWN_RIGHT),
+        MoveDirection(LEFT),
+        MoveDirection(RIGHT),
+        MoveDirection(UP),
     ]
 
     MoveDirections = {
         Piece.NO_PIECE: None,
-        Piece.BLACK_PAWN: [MoveDirection(Up)],
-        Piece.BLACK_LANCE: [MoveDirection(Up, True)],
+        Piece.BLACK_PAWN: [MoveDirection(UP)],
+        Piece.BLACK_LANCE: [MoveDirection(UP, True)],
         Piece.BLACK_KNIGHT: [
             MoveDirection(Direction(-1, -2)),
             MoveDirection(Direction(1, -2)),
         ],
         Piece.BLACK_SILVER: [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(DownLeft),
-            MoveDirection(DownRight),
+            MoveDirection(UP_LEFT),
+            MoveDirection(UP),
+            MoveDirection(UP_RIGHT),
+            MoveDirection(DOWN_LEFT),
+            MoveDirection(DOWN_RIGHT),
         ],
-        Piece.BLACK_GOLD: MoveGold,
+        Piece.BLACK_GOLD: MOVE_BLACK_GOLD,
         Piece.BLACK_BISHOP: [
-            MoveDirection(UpLeft, True),
-            MoveDirection(UpRight, True),
-            MoveDirection(DownLeft, True),
-            MoveDirection(DownRight, True),
+            MoveDirection(UP_LEFT, True),
+            MoveDirection(UP_RIGHT, True),
+            MoveDirection(DOWN_LEFT, True),
+            MoveDirection(DOWN_RIGHT, True),
         ],
         Piece.BLACK_ROOK: [
-            MoveDirection(Up, True),
-            MoveDirection(Left, True),
-            MoveDirection(Right, True),
-            MoveDirection(Down, True),
+            MoveDirection(UP, True),
+            MoveDirection(LEFT, True),
+            MoveDirection(RIGHT, True),
+            MoveDirection(DOWN, True),
         ],
         Piece.BLACK_KING: [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
+            MoveDirection(UP_LEFT),
+            MoveDirection(UP),
+            MoveDirection(UP_RIGHT),
+            MoveDirection(LEFT),
+            MoveDirection(RIGHT),
+            MoveDirection(DOWN_LEFT),
+            MoveDirection(DOWN),
+            MoveDirection(DOWN_RIGHT),
         ],
-        Piece.BLACK_PROMOTED_PAWN: MoveGold,
-        Piece.BLACK_PROMOTED_LANCE: MoveGold,
-        Piece.BLACK_PROMOTED_KNIGHT: MoveGold,
-        Piece.BLACK_PROMOTED_SILVER: MoveGold,
+        Piece.BLACK_PROMOTED_PAWN: MOVE_BLACK_GOLD,
+        Piece.BLACK_PROMOTED_LANCE: MOVE_BLACK_GOLD,
+        Piece.BLACK_PROMOTED_KNIGHT: MOVE_BLACK_GOLD,
+        Piece.BLACK_PROMOTED_SILVER: MOVE_BLACK_GOLD,
         Piece.BLACK_HORSE: [
-            MoveDirection(UpLeft, True),
-            MoveDirection(Up),
-            MoveDirection(UpRight, True),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft, True),
-            MoveDirection(Down),
-            MoveDirection(DownRight, True),
+            MoveDirection(UP_LEFT, True),
+            MoveDirection(UP),
+            MoveDirection(UP_RIGHT, True),
+            MoveDirection(LEFT),
+            MoveDirection(RIGHT),
+            MoveDirection(DOWN_LEFT, True),
+            MoveDirection(DOWN),
+            MoveDirection(DOWN_RIGHT, True),
         ],
         Piece.BLACK_DRAGON: [
-            MoveDirection(UpLeft),
-            MoveDirection(Up, True),
-            MoveDirection(UpRight),
-            MoveDirection(Left, True),
-            MoveDirection(Right, True),
-            MoveDirection(DownLeft),
-            MoveDirection(Down, True),
-            MoveDirection(DownRight),
+            MoveDirection(UP_LEFT),
+            MoveDirection(UP, True),
+            MoveDirection(UP_RIGHT),
+            MoveDirection(LEFT, True),
+            MoveDirection(RIGHT, True),
+            MoveDirection(DOWN_LEFT),
+            MoveDirection(DOWN, True),
+            MoveDirection(DOWN_RIGHT),
         ],
-        Piece.WHITE_PAWN: [MoveDirection(Down)],
-        Piece.WHITE_LANCE: [MoveDirection(Down, True)],
+        Piece.WHITE_PAWN: [MoveDirection(DOWN)],
+        Piece.WHITE_LANCE: [MoveDirection(DOWN, True)],
         Piece.WHITE_KNIGHT: [
             MoveDirection(Direction(1, 2)),
             MoveDirection(Direction(-1, 2)),
         ],
         Piece.WHITE_SILVER: [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(DownLeft),
-            MoveDirection(DownRight),
+            MoveDirection(UP_LEFT),
+            MoveDirection(UP),
+            MoveDirection(UP_RIGHT),
+            MoveDirection(DOWN_LEFT),
+            MoveDirection(DOWN_RIGHT),
         ],
-        Piece.WHITE_GOLD: MoveGold,
+        Piece.WHITE_GOLD: MOVE_WHITE_GOLD,
         Piece.WHITE_BISHOP: [
-            MoveDirection(UpLeft, True),
-            MoveDirection(UpRight, True),
-            MoveDirection(DownLeft, True),
-            MoveDirection(DownRight, True),
+            MoveDirection(UP_LEFT, True),
+            MoveDirection(UP_RIGHT, True),
+            MoveDirection(DOWN_LEFT, True),
+            MoveDirection(DOWN_RIGHT, True),
         ],
         Piece.WHITE_ROOK: [
-            MoveDirection(Up, True),
-            MoveDirection(Left, True),
-            MoveDirection(Right, True),
-            MoveDirection(Down, True),
+            MoveDirection(UP, True),
+            MoveDirection(LEFT, True),
+            MoveDirection(RIGHT, True),
+            MoveDirection(DOWN, True),
         ],
         Piece.WHITE_KING: [
-            MoveDirection(UpLeft),
-            MoveDirection(Up),
-            MoveDirection(UpRight),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft),
-            MoveDirection(Down),
-            MoveDirection(DownRight),
+            MoveDirection(UP_LEFT),
+            MoveDirection(UP),
+            MoveDirection(UP_RIGHT),
+            MoveDirection(LEFT),
+            MoveDirection(RIGHT),
+            MoveDirection(DOWN_LEFT),
+            MoveDirection(DOWN),
+            MoveDirection(DOWN_RIGHT),
         ],
-        Piece.WHITE_PROMOTED_PAWN: MoveGold,
-        Piece.WHITE_PROMOTED_LANCE: MoveGold,
-        Piece.WHITE_PROMOTED_KNIGHT: MoveGold,
-        Piece.WHITE_PROMOTED_SILVER: MoveGold,
+        Piece.WHITE_PROMOTED_PAWN: MOVE_WHITE_GOLD,
+        Piece.WHITE_PROMOTED_LANCE: MOVE_WHITE_GOLD,
+        Piece.WHITE_PROMOTED_KNIGHT: MOVE_WHITE_GOLD,
+        Piece.WHITE_PROMOTED_SILVER: MOVE_WHITE_GOLD,
         Piece.WHITE_HORSE: [
-            MoveDirection(UpLeft, True),
-            MoveDirection(Up),
-            MoveDirection(UpRight, True),
-            MoveDirection(Left),
-            MoveDirection(Right),
-            MoveDirection(DownLeft, True),
-            MoveDirection(Down),
-            MoveDirection(DownRight, True),
+            MoveDirection(UP_LEFT, True),
+            MoveDirection(UP),
+            MoveDirection(UP_RIGHT, True),
+            MoveDirection(LEFT),
+            MoveDirection(RIGHT),
+            MoveDirection(DOWN_LEFT, True),
+            MoveDirection(DOWN),
+            MoveDirection(DOWN_RIGHT, True),
         ],
         Piece.WHITE_DRAGON: [
-            MoveDirection(UpLeft),
-            MoveDirection(Up, True),
-            MoveDirection(UpRight),
-            MoveDirection(Left, True),
-            MoveDirection(Right, True),
-            MoveDirection(DownLeft),
-            MoveDirection(Down, True),
-            MoveDirection(DownRight),
+            MoveDirection(UP_LEFT),
+            MoveDirection(UP, True),
+            MoveDirection(UP_RIGHT),
+            MoveDirection(LEFT, True),
+            MoveDirection(RIGHT, True),
+            MoveDirection(DOWN_LEFT),
+            MoveDirection(DOWN, True),
+            MoveDirection(DOWN_RIGHT),
         ],
     }
