@@ -3,6 +3,8 @@ from position import Position
 from generate import generate
 from move import Move
 from evaluator import Evaluator
+import time
+from searcher import Searcher
 
 import random
 import traceback
@@ -63,22 +65,23 @@ def main():
                     for move in ok_moves:
                         print(move)
                 case "go":
-                    moves = list(generate(position))
-                    ok_moves = []
-                    for move in moves:
-                        position.do_move(move)
-                        if not position.is_in_checked(
-                            position.side_to_move.to_opponent()
-                        ):
-                            ok_moves.append(move)
-                        position.undo_move(move)
-                    if not ok_moves:
+                    depth = 3
+                    begin_time = time.time()
+                    nodes = 0
+                    best_move = Searcher.search(position, depth, nodes)
+                    end_time = time.time()
+                    time_diff = end_time - begin_time
+                    best_move_string = best_move.move.to_usi_string()
+                    score_cp = best_move.value
+                    nps = nodes / time_diff
+                    print(
+                        f"info score cp {score_cp} nodes {nodes} nps {nps} time {time_diff} pv {best_move_string}"
+                    )
+                    if best_move.value < -30000:
                         print("bestmove resign")
-                        sys.stdout.flush()
                     else:
-                        move = random.choice(ok_moves)
-                        print(f"bestmove {move.to_usi_string()}")
-                        sys.stdout.flush()
+                        print(f"bestmove {best_move_string}")
+                    sys.stdout.flush()
                 case "eval":
                     print(Evaluator.evaluate(position))
                 case "check":
