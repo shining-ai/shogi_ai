@@ -2,6 +2,7 @@ import sys
 from position import Position
 from generate import generate
 from move import Move
+from evaluator import Evaluator
 
 import random
 import traceback
@@ -78,6 +79,8 @@ def main():
                         move = random.choice(ok_moves)
                         print(f"bestmove {move.to_usi_string()}")
                         sys.stdout.flush()
+                case "eval":
+                    print(Evaluator.evaluate(position))
                 case "check":
                     print(position.is_in_checked())
                     sys.stdout.flush()
